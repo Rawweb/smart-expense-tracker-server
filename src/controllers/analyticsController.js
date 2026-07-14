@@ -105,19 +105,20 @@ export const getDashboard = async (req, res) => {
   const now = new Date();
 
   // Six independent queries. Fired together, not one after another.
-  const [summary, byCategory, daily, activeBudgets, recentExpenses, unreadCount] =
-    await Promise.all([
-      getSummary(req.user._id, range.start, range.end),
-      getSpendingByCategory(req.user._id, range.start, range.end),
-      getDailySpending(req.user._id, range.start, range.end),
-      Budget.find({
-        user: req.user._id,
-        startDate: { $lte: now },
-        endDate: { $gte: now },
-      }),
-      Expense.find({ user: req.user._id }).sort({ date: -1 }).limit(5),
-      Notification.countDocuments({ user: req.user._id, isRead: false }),
-    ]);
+ const [summary, byCategory, daily, activeBudgets, recentExpenses, unreadCount, latestAlert] =
+   await Promise.all([
+     getSummary(req.user._id, range.start, range.end),
+     getSpendingByCategory(req.user._id, range.start, range.end),
+     getDailySpending(req.user._id, range.start, range.end),
+     Budget.find({
+       user: req.user._id,
+       startDate: { $lte: now },
+       endDate: { $gte: now },
+     }),
+     Expense.find({ user: req.user._id }).sort({ date: -1 }).limit(5),
+     Notification.countDocuments({ user: req.user._id, isRead: false }),
+     Notification.findOne({ user: req.user._id, isRead: false }).sort({ createdAt: -1 }),
+   ]);
 
   // Budget usage needs its own round of queries, and it depends on the budgets above.
   const budgets = await Promise.all(activeBudgets.map((b) => getBudgetUsage(b)));

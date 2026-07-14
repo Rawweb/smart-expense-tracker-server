@@ -10,25 +10,32 @@ const sumAmount = async (Model, userId, startDate, endDate) => {
       },
     },
     {
-      $group: { _id: null, total: { $sum: '$amount' } },
+      $group: {
+        _id: null,
+        total: { $sum: '$amount' },
+        count: { $sum: 1 }, // adds 1 for every document in the group
+      },
     },
   ]);
 
-  // aggregate returns an empty array when nothing matched.
-  return result.length > 0 ? result[0].total : 0;
-};
+  return result.length > 0
+    ? { total: result[0].total, count: result[0].count }
+    : { total: 0, count: 0 };
+};;
 
 // Total income, total expenses, and what is left.
 export const getSummary = async (userId, startDate, endDate) => {
-  const [totalIncome, totalExpenses] = await Promise.all([
+  const [income, expenses] = await Promise.all([
     sumAmount(Income, userId, startDate, endDate),
     sumAmount(Expense, userId, startDate, endDate),
   ]);
 
   return {
-    totalIncome,
-    totalExpenses,
-    balance: totalIncome - totalExpenses,
+    totalIncome: income.total,
+    incomeCount: income.count,
+    totalExpenses: expenses.total,
+    expenseCount: expenses.count,
+    balance: income.total - expenses.total,
   };
 };
 
