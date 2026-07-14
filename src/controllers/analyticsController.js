@@ -132,5 +132,6 @@ export const getDashboard = async (req, res) => {
     budgets,
     recentExpenses,
     unreadCount,
+    latestAlert,
   });
 };
