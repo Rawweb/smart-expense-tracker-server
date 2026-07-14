@@ -1,7 +1,8 @@
-import AppError from '../utils/AppError.js';
-
-const notFound = (req, res, next) => {
-  next(new AppError(`Route not found: ${req.method} ${req.originalUrl}`, 404));
+// Runs only when no route above it matched.
+const notFound = (req, res) => {
+  res.status(404).json({
+    message: `Route not found: ${req.method} ${req.originalUrl}`,
+  });
 };
 
 export default notFound;

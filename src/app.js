@@ -3,8 +3,10 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 
+import authRoutes from './routes/authRoutes.js';
 import notFound from './middleware/notFound.js';
 import errorHandler from './middleware/errorHandler.js';
+
 
 const app = express();
 
@@ -35,15 +37,14 @@ app.get('/api/health', (req, res) => {
 });
 
 // Routes
-
-// Sprint 1: app.use("/api/auth", authRoutes);
+app.use("/api/auth", authRoutes);
 // Sprint 2: app.use("/api/incomes", incomeRoutes);
 // Sprint 2: app.use("/api/expenses", expenseRoutes);
 // Sprint 3: app.use("/api/budgets", budgetRoutes);
 // Sprint 4: app.use("/api/notifications", notificationRoutes);
 
-// Error handling middleware. These MUST be registered after all routes, so they can catch errors from them.
-app.use(notFound); // nothing above matched, so produce a clean 404
-app.use(errorHandler); // the single exit point for every error in the app
+// ---------- Errors (must stay last) ----------
+app.use(notFound); 
+app.use(errorHandler);
 
 export default app;
