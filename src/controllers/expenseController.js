@@ -1,5 +1,5 @@
 import Expense from '../models/Expense.js';
-import { checkBudgetAlerts } from '../services/alertService.js';
+import { checkBudgetAlerts, recheckBudgetThresholds } from '../services/alertService.js';
 // @desc    Create an expense
 // @route   POST /api/expenses
 // @access  Private
@@ -85,6 +85,12 @@ export const updateExpense = async (req, res) => {
     return res.status(404).json({ message: 'Expense not found' });
   }
 
+  try {
+    await recheckBudgetThresholds(req.user._id, expense);
+  } catch (error) {
+    console.error('Threshold recheck failed:', error.message);
+  }
+
   res.status(200).json({
     message: 'Expense updated successfully',
     expense,
@@ -99,6 +105,12 @@ export const deleteExpense = async (req, res) => {
 
   if (!expense) {
     return res.status(404).json({ message: 'Expense not found' });
+  }
+
+  try {
+    await recheckBudgetThresholds(req.user._id, expense);
+  } catch (error) {
+    console.error('Threshold recheck failed:', error.message);
   }
 
   res.status(200).json({ message: 'Expense deleted successfully' });

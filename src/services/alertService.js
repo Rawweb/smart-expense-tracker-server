@@ -4,17 +4,18 @@ import { getSpentAmount } from './budgetService.js';
 
 const THRESHOLDS = [50, 80, 100];
 
-// Builds the sentence the user reads.
-const buildMessage = (budget, spent, percentage, threshold) => {
-  const scope = budget.category === 'Overall' ? 'overall budget' : `${budget.category} budget`;
+// ₦16,300
+const formatNaira = (n) => `₦${n.toLocaleString()}`;
+
+// The figures only. React builds the headline, so we do not say it twice.
+const buildMessage = (budget, spent, threshold) => {
   const remaining = budget.limit - spent;
 
   if (threshold === 100) {
-    return `You have used up your ${scope}. Spent ₦${spent.toLocaleString()} of ₦${budget.limit.toLocaleString()}.`;
+    return `${formatNaira(spent)} spent against a ${formatNaira(budget.limit)} limit.`;
   }
 
-  // Name the threshold that was crossed, then show where they actually stand.
-  return `You have passed ${threshold}% of your ${scope}. ₦${spent.toLocaleString()} of ₦${budget.limit.toLocaleString()} used, ₦${remaining.toLocaleString()} left.`;
+  return `${formatNaira(spent)} of ${formatNaira(budget.limit)} used. ${formatNaira(remaining)} left.`;
 };
 
 export const checkBudgetAlerts = async (userId, expense) => {
@@ -44,7 +45,7 @@ export const checkBudgetAlerts = async (userId, expense) => {
         user: userId,
         budget: budget._id,
         threshold,
-        message: buildMessage(budget, spent, percentage, threshold),
+        message: buildMessage(budget, spent, threshold),
         category: budget.category,
         spent,
         limit: budget.limit,
@@ -60,4 +61,30 @@ export const checkBudgetAlerts = async (userId, expense) => {
   }
 
   return newAlerts;
+};
+
+// Runs after an expense is deleted or edited. Spending may have fallen back
+// below a threshold we already announced, so we remove it from the budget's
+// memory. Without this, crossing that line again would be silent.
+export const recheckBudgetThresholds = async (userId, expense) => {
+  const budgets = await Budget.find({
+    user: userId,
+    category: { $in: [expense.category, 'Overall'] },
+    startDate: { $lte: expense.date },
+    endDate: { $gte: expense.date },
+  });
+
+  for (const budget of budgets) {
+    const spent = await getSpentAmount(userId, budget.startDate, budget.endDate, budget.category);
+    const percentage = Math.round((spent / budget.limit) * 100);
+
+    // Keep only the thresholds the user is STILL past.
+    const stillPast = budget.notifiedThresholds.filter((t) => percentage >= t);
+
+    // Nothing changed, so do not write to the database for no reason.
+    if (stillPast.length === budget.notifiedThresholds.length) continue;
+
+    budget.notifiedThresholds = stillPast;
+    await budget.save();
+  }
 };
