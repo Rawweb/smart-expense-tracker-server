@@ -4,9 +4,10 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 
 import authRoutes from './routes/authRoutes.js';
+import expenseRoutes from './routes/expenseRoutes.js';
+import incomeRoutes from './routes/incomeRoutes.js';
 import notFound from './middleware/notFound.js';
 import errorHandler from './middleware/errorHandler.js';
-
 
 const app = express();
 
@@ -37,14 +38,15 @@ app.get('/api/health', (req, res) => {
 });
 
 // Routes
-app.use("/api/auth", authRoutes);
-// Sprint 2: app.use("/api/incomes", incomeRoutes);
-// Sprint 2: app.use("/api/expenses", expenseRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/expenses', expenseRoutes);
+app.use('/api/incomes', incomeRoutes);
+
 // Sprint 3: app.use("/api/budgets", budgetRoutes);
 // Sprint 4: app.use("/api/notifications", notificationRoutes);
 
 // ---------- Errors (must stay last) ----------
-app.use(notFound); 
+app.use(notFound);
 app.use(errorHandler);
 
 export default app;
