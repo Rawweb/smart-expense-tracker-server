@@ -1,5 +1,5 @@
 import Expense from '../models/Expense.js';
-
+import { checkBudgetAlerts } from '../services/alertService.js';
 // @desc    Create an expense
 // @route   POST /api/expenses
 // @access  Private
@@ -23,9 +23,17 @@ export const createExpense = async (req, res) => {
     date,
   });
 
+  let alerts = [];
+  try {
+    alerts = await checkBudgetAlerts(req.user._id, expense);
+  } catch (error) {
+    console.error('Alert check failed:', error.message);
+  }
+
   res.status(201).json({
     message: 'Expense added successfully',
     expense,
+    alerts,
   });
 };
 

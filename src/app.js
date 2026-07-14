@@ -7,6 +7,7 @@ import authRoutes from './routes/authRoutes.js';
 import expenseRoutes from './routes/expenseRoutes.js';
 import incomeRoutes from './routes/incomeRoutes.js';
 import budgetRoutes from './routes/budgetRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
 import notFound from './middleware/notFound.js';
 import errorHandler from './middleware/errorHandler.js';
 
@@ -42,8 +43,8 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/expenses', expenseRoutes);
 app.use('/api/incomes', incomeRoutes);
- app.use("/api/budgets", budgetRoutes);
-// Sprint 4: app.use("/api/notifications", notificationRoutes);
+app.use("/api/budgets", budgetRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 // ---------- Errors (must stay last) ----------
 app.use(notFound);
