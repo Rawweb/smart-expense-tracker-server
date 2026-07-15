@@ -1,6 +1,7 @@
 import Budget from '../models/Budget.js';
 import Notification from '../models/Notification.js';
 import { getSpentAmount } from './budgetService.js';
+import { emitToUser } from '../config/socket.js';
 
 const THRESHOLDS = [50, 80, 100];
 
@@ -18,7 +19,7 @@ const buildMessage = (budget, spent, threshold) => {
   return `${formatNaira(spent)} of ${formatNaira(budget.limit)} used. ${formatNaira(remaining)} left.`;
 };
 
-export const checkBudgetAlerts = async (userId, expense) => {
+export const checkBudgetAlerts = async (userId, expense, excludeSocketId = null) => {
   const budgets = await Budget.find({
     user: userId,
     category: { $in: [expense.category, 'Overall'] },
@@ -59,6 +60,10 @@ export const checkBudgetAlerts = async (userId, expense) => {
     budget.notifiedThresholds.push(...crossed);
     await budget.save();
   }
+
+if (newAlerts.length > 0) {
+  emitToUser(userId, 'budget-alert', newAlerts, excludeSocketId);
+}
 
   return newAlerts;
 };

@@ -25,7 +25,7 @@ export const createExpense = async (req, res) => {
 
   let alerts = [];
   try {
-    alerts = await checkBudgetAlerts(req.user._id, expense);
+    alerts = await checkBudgetAlerts(req.user._id, expense, req.headers['x-socket-id'] || null);
   } catch (error) {
     console.error('Alert check failed:', error.message);
   }
